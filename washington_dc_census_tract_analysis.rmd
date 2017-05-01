@@ -1,0 +1,62 @@
+---
+title: "Post Offices as Banks"
+date: April 2017
+author: "Erik Jensen"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+Starting off by importing the data.
+
+```{r}
+data.df <- read.csv('census_tract_data.csv')
+```
+
+Now finding the area and population of each tract covered by banks and by banks and post offices combined.
+
+```{r}
+data.df$bank_perc <- data.df$Bank_Intersection_bank_area / data.df$area
+data.df$all_perc <- data.df$Overall_Intersection_overall_area / data.df$area
+
+poverty.df <- data.df[data.df$is_poverty_tract == 1, ]
+non.poverty.df <- data.df[data.df$is_poverty_tract == 0, ]
+
+# Poverty census tracts first
+# Area percentages
+sum(poverty.df[!is.na(poverty.df$Bank_Intersection_bank_area), ]$Bank_Intersection_bank_area) / sum(poverty.df$area)
+sum(poverty.df[!is.na(poverty.df$Overall_Intersection_overall_area), ]$Overall_Intersection_overall_area) / sum(poverty.df$area)
+
+# Population
+sum(na.omit(poverty.df$bank_perc * poverty.df$Total_Population)) -
+  sum(na.omit(poverty.df$all_perc * poverty.df$Total_Population))
+sum(poverty.df$Total_Population)
+
+# Citywide comparison
+sum(data.df[!is.na(data.df$Bank_Intersection_bank_area), ]$Bank_Intersection_bank_area) / sum(data.df$area)
+sum(data.df[!is.na(data.df$Overall_Intersection_overall_area), ]$Overall_Intersection_overall_area) / sum(data.df$area)
+
+# Population
+sum(na.omit(data.df$bank_perc * data.df$Total_Population)) -
+  sum(na.omit(data.df$all_perc * data.df$Total_Population))
+sum(data.df$Total_Population)
+```
+
+## Sensitivity Analysis
+
+```{r}
+p.df <- poverty.df
+p.df$Total_Population <- p.df$Total_Population + p.df$Total_Population_Error
+p.df$Total_Poverty <- p.df$Total_Poverty - p.df$Total_Poverty_Error
+
+# re evaluating poverty census tracts
+p.df <- p.df[p.df$Total_Poverty / p.df$Total_Population >= 0.2, ]
+
+sum(p.df[!is.na(p.df$Bank_Intersection_bank_area), ]$Bank_Intersection_bank_area) / sum(p.df$area)
+sum(p.df[!is.na(p.df$Overall_Intersection_overall_area), ]$Overall_Intersection_overall_area) / sum(p.df$area)
+
+# Population
+sum(na.omit(p.df$bank_perc * p.df$Total_Population)) -
+  sum(na.omit(p.df$all_perc * p.df$Total_Population))
+sum(p.df$Total_Population)
+```
